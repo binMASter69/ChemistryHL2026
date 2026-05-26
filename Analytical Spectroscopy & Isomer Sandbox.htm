@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACSI 140th | Isomerism & Spectroscopy Sandbox</title>
+    <script src="https://cdn.jsdelivr.net/npm/smiles-drawer@1.0.10/dist/smiles-drawer.min.js"></script>
+    <style>
+        :root {
+            --primary: #1e3a8a; /* ACSI Navy Blue */
+            --secondary: #b91c1c; /* ACSI Red */
+            --accent: #fbbf24; /* Gold */
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --nmr-bg: #f0fdf4;
+            --nmr-border: #bbf7d0;
+            --ir-bg: #fff1f2;
+            --ir-border: #fecdd3;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 2rem 1rem;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 14px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        .school-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 3px solid var(--secondary);
+            padding-bottom: 1.5rem;
+        }
+
+        .school-logo {
+            width: 90px;
+            height: 90px;
+            flex-shrink: 0;
+        }
+
+        .header-text h1 {
+            margin: 0 0 0.25rem 0;
+            font-size: 1.85rem;
+            color: var(--primary);
+        }
+
+        .header-text p {
+            margin: 0;
+            color: var(--secondary);
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .controls { grid-template-columns: 1fr; }
+            .school-header { flex-direction: column; text-align: center; }
+        }
+
+        label { display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem; }
+        select, input[type="range"] {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: #fff;
+            font-size: 1rem;
+        }
+
+        .formula-bar {
+            background: #e0f2fe;
+            border-left: 4px solid #0284c7;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 2rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .system-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .system-layout { grid-template-columns: 1fr; }
+        }
+
+        .column-panel {
+            background: #fafafa;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+
+        .column-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .panel-a .column-title { color: var(--primary); }
+        .panel-b .column-title { color: var(--secondary); }
+
+        .grid-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .isomer-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .isomer-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1e293b;
+            text-align: center;
+        }
+
+        canvas {
+            background: #ffffff;
+            align-self: center;
+            border-radius: 4px;
+        }
+
+        .spec-panel {
+            font-size: 0.8rem;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .spec-box {
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid transparent;
+        }
+
+        .nmr-box { background-color: var(--nmr-bg); border-color: var(--nmr-border); }
+        .ir-box { background-color: var(--ir-bg); border-color: var(--ir-border); }
+
+        .spec-title {
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .panel-a .spec-title { color: #166534; }
+        .panel-b .spec-title { color: #991b1b; }
+
+        .empty-msg {
+            color: var(--text-muted);
+            font-style: italic;
+            font-size: 0.9rem;
+            padding: 2rem 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header class="school-header">
+        <svg class="school-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="46" fill="#1e3a8a" stroke="#b91c1c" stroke-width="6"/>
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#fbbf24" stroke-width="1" stroke-dasharray="2,2"/>
+            <text x="50" y="42" font-family="Arial, sans-serif" font-size="28" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="1">ACS</text>
+            <text x="50" y="62" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#fbbf24" text-anchor="middle">140 YEARS</text>
+            <text x="50" y="78" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#ffffff" text-anchor="middle">1886 - 2026</text>
+        </svg>
+        
+        <div class="header-text">
+            <h1>Analytical Spectroscopy & Isomer Sandbox</h1>
+            <p class="subtitle">Chemistry Department | 2026 | ACSI</p>
+        </div>
+    </header>
+
+    <div class="controls">
+        <div>
+            <label for="isomerPair">Isomeric System Pairing</label>
+            <select id="isomerPair">
+                <option value="alkene_cycloalkane">Alkenes vs Cycloalkanes (CₙH₂ₙ Functional Isomers)</option>
+                <option value="aliphatic_alkane">Aliphatic Alkanes (CₙH₂ₙ₊₂ Reference Matrix)</option>
+                <option value="alcohol_ether">Alcohols & Ethers (CₙH₂ₙ₊₂O)</option>
+                <option value="carbonyls">Aldehydes & Ketones (CₙH₂ₙO)</option>
+                <option value="esters_acids" selected>Carboxylic Acids & Esters (CₙH₂ₙO₂)</option>
+            </select>
+        </div>
+        <div>
+            <label for="carbonSlider">Carbon Scope (n): <span id="carbonCount" style="color:var(--secondary); font-weight:bold;">5</span></label>
+            <input type="range" id="carbonSlider" min="1" max="6" value="5">
+        </div>
+    </div>
+
+    <div class="formula-bar" id="formulaDisplay">Molecular Formula Family: Loading...</div>
+
+    <div class="system-layout">
+        <div class="column-panel panel-a">
+            <h3 class="column-title" id="titleA">Family A</h3>
+            <div class="grid-display" id="gridA"></div>
+        </div>
+        <div class="column-panel panel-b">
+            <h3 class="column-title" id="titleB">Family B</h3>
+            <div class="grid-display" id="gridB"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const masterIsomerData = {
+        alkene: {
+            2: [{ name: "Ethene", smiles: "C=C", nmr: "1 Env (Ratio 4)", ir: "C=C stretch: 1620-1680 cm⁻¹<br>=C-H (sp²) stretch: 3010-3095 cm⁻¹" }],
+            3: [{ name: "Propene", smiles: "C=CC", nmr: "4 Envs (Ratio 3:1:1:1)", ir: "C=C stretch: 1620-1680 cm⁻¹<br>=C-H (sp²) stretch: 3010-3095 cm⁻¹" }],
+            4: [
+                { name: "But-1-ene", smiles: "C=CCC", nmr: "4 Envs (Ratio 3:2:1:2)", ir: "C=C stretch: 1620-1680 cm⁻¹" },
+                { name: "But-2-ene", smiles: "CC=CC", nmr: "2 Envs (Ratio 6:2)", ir: "C=C stretch: 1620-1680 cm⁻¹ (weak)" },
+                { name: "2-Methylpropene", smiles: "CC(=C)C", nmr: "2 Envs (Ratio 6:2)", ir: "C=C stretch: 1620-1680 cm⁻¹" }
+            ],
+            5: [
+                { name: "Pent-1-ene", smiles: "C=CCCC", nmr: "5 Envs (Ratio 3:2:2:1:2)", ir: "C=C stretch: 1620-1680 cm⁻¹" },
+                { name: "Pent-2-ene", smiles: "CC=CCC", nmr: "5 Envs", ir: "C=C stretch: 1620-1680 cm⁻¹" },
+                { name: "2-Methylbut-1-ene", smiles: "CC(=C)CC", nmr: "4 Envs", ir: "C=C stretch" },
+                { name: "2-Methylbut-2-ene", smiles: "CC=C(C)C", nmr: "3 Envs", ir: "C=C stretch" },
+                { name: "3-Methylbut-1-ene", smiles: "C=CC(C)C", nmr: "4 Envs", ir: "C=C stretch" }
+            ],
+            6: [
+                { name: "Hex-1-ene", smiles: "C=CCCCC", nmr: "6 Envs", ir: "C=C stretch: 1620-1680 cm⁻¹" },
+                { name: "Hex-2-ene", smiles: "CC=CCCC", nmr: "6 Envs", ir: "C=C stretch" },
+                { name: "Hex-3-ene", smiles: "CCC=CCC", nmr: "3 Envs", ir: "C=C stretch" }
+            ]
+        },
+        cycloalkane: {
+            3: [{ name: "Cyclopropane", smiles: "C1CC1", nmr: "1 Env (Ratio 6)", ir: "C-H (alkane) stretch: 2850-2960 cm⁻¹" }],
+            4: [
+                { name: "Cyclobutane", smiles: "C1CCC1", nmr: "1 Env (Ratio 8)", ir: "C-H (alkane) stretch: 2850-2960 cm⁻¹" },
+                { name: "Methylcyclopropane", smiles: "CC1CC1", nmr: "4 Envs", ir: "C-H stretch" }
+            ],
+            5: [
+                { name: "Cyclopentane", smiles: "C1CCCC1", nmr: "1 Env (Ratio 10)", ir: "C-H (alkane) stretch: 2850-2960 cm⁻¹" },
+                { name: "Methylcyclobutane", smiles: "CC1CCC1", nmr: "5 Envs", ir: "C-H stretch" }
+            ],
+            6: [
+                { name: "Cyclohexane", smiles: "C1CCCCC1", nmr: "1 Env (Ratio 12)", ir: "C-H (alkane) stretch: 2850-2960 cm⁻¹" },
+                { name: "Methylcyclopentane", smiles: "CC1CCCC1", nmr: "4 Envs", ir: "C-H stretch" }
+            ]
+        },
+        aliphatic_alkane: {
+            1: [{ name: "Methane", smiles: "C", nmr: "1 Env (Ratio 4)", ir: "C-H stretch: 2850-2960 cm⁻¹" }],
+            2: [{ name: "Ethane", smiles: "CC", nmr: "1 Env (Ratio 6)", ir: "C-H stretch: 2850-2960 cm⁻¹" }],
+            3: [{ name: "Propane", smiles: "CCC", nmr: "2 Envs (Ratio 6:2)", ir: "C-H stretch: 2850-2960 cm⁻¹" }],
+            4: [
+                { name: "Butane", smiles: "CCCC", nmr: "2 Envs (Ratio 6:4)", ir: "C-H stretch: 2850-2960 cm⁻¹" },
+                { name: "2-Methylpropane", smiles: "CC(C)C", nmr: "2 Envs (Ratio 9:1)", ir: "C-H stretch: 2850-2960 cm⁻¹" }
+            ],
+            5: [
+                { name: "Pentane", smiles: "CCCCC", nmr: "3 Envs (Ratio 6:4:2)", ir: "C-H stretch" },
+                { name: "2-Methylbutane", smiles: "CCC(C)C", nmr: "4 Envs", ir: "C-H stretch" },
+                { name: "2,2-Dimethylpropane", smiles: "CC(C)(C)C", nmr: "1 Env (Ratio 12)", ir: "C-H stretch" }
+            ],
+            6: [
+                { name: "Hexane", smiles: "CCCCCC", nmr: "3 Envs", ir: "C-H stretch" },
+                { name: "2-Methylpentane", smiles: "CCCC(C)C", nmr: "5 Envs", ir: "C-H stretch" },
+                { name: "3-Methylpentane", smiles: "CCC(C)CC", nmr: "4 Envs", ir: "C-H stretch" }
+            ]
+        },
+        empty: {},
+        alcohol: {
+            1: [{ name: "Methanol", smiles: "CO", nmr: "2 Envs (Ratio 3:1)", ir: "O-H: 3200-3600 cm⁻¹ (broad)" }],
+            2: [{ name: "Ethanol", smiles: "CCO", nmr: "3 Envs (Ratio 3:2:1)", ir: "O-H: 3200-3600 cm⁻¹ (broad)" }],
+            3: [
+                { name: "Propan-1-ol", smiles: "CCCO", nmr: "4 Envs (Ratio 3:2:2:1)", ir: "O-H: 3200-3600 cm⁻¹" },
+                { name: "Propan-2-ol", smiles: "CC(O)C", nmr: "3 Envs (Ratio 6:1:1)", ir: "O-H: 3200-3600 cm⁻¹" }
+            ],
+            4: [
+                { name: "Butan-1-ol", smiles: "CCCCO", nmr: "5 Envs", ir: "O-H: 3200-3600 cm⁻¹" },
+                { name: "Butan-2-ol", smiles: "CCC(O)C", nmr: "5 Envs", ir: "O-H: 3200-3600 cm⁻¹" },
+                { name: "2-Methylpropan-1-ol", smiles: "CC(C)CO", nmr: "4 Envs", ir: "O-H: 3200-3600 cm⁻¹" },
+                { name: "2-Methylpropan-2-ol", smiles: "CC(C)(C)O", nmr: "2 Envs", ir: "O-H: 3200-3600 cm⁻¹" }
+            ],
+            5: [
+                { name: "Pentan-1-ol", smiles: "CCCCCO", nmr: "6 Envs", ir: "O-H: 3200-3600 cm⁻¹" },
+                { name: "Pentan-2-ol", smiles: "CCCC(O)C", nmr: "6 Envs", ir: "O-H: 3200-3600 cm⁻¹" },
+                { name: "Pentan-3-ol", smiles: "CCC(O)CC", nmr: "4 Envs", ir: "O-H: 3200-3600 cm⁻¹" }
+            ],
+            6: [{ name: "Hexan-1-ol", smiles: "CCCCCCO", nmr: "7 Envs", ir: "O-H: 3200-3600 cm⁻¹" }]
+        },
+        ether: {
+            2: [{ name: "Methoxymethane", smiles: "COC", nmr: "1 Env (Ratio 6)", ir: "C-O ether: 1050-1300 cm⁻¹" }],
+            3: [{ name: "Methoxyethane", smiles: "CCOC", nmr: "3 Envs (Ratio 3:3:2)", ir: "C-O ether: 1050-1300 cm⁻¹" }],
+            4: [
+                { name: "Ethoxyethane", smiles: "CCOCC", nmr: "2 Envs (Ratio 6:4)", ir: "C-O ether: 1050-1300 cm⁻¹" },
+                { name: "1-Methoxypropane", smiles: "COCCC", nmr: "4 Envs", ir: "C-O ether: 1050-1300 cm⁻¹" },
+                { name: "2-Methoxypropane", smiles: "COC(C)C", nmr: "3 Envs", ir: "C-O ether" }
+            ],
+            5: [
+                { name: "1-Methoxybutane", smiles: "COCCCC", nmr: "5 Envs", ir: "C-O ether: 1050-1300 cm⁻¹" },
+                { name: "1-Ethoxypropane", smiles: "CCOCCC", nmr: "5 Envs", ir: "C-O ether" }
+            ],
+            6: [{ name: "1-Methoxypentane", smiles: "COCCCCC", nmr: "6 Envs", ir: "C-O ether" }]
+        },
+        aldehyde: {
+            1: [{ name: "Methanal", smiles: "C=O", nmr: "1 Env (Ratio 2)", ir: "C=O: 1720-1740 cm⁻¹" }],
+            2: [{ name: "Ethanal", smiles: "CC=O", nmr: "2 Envs (Ratio 3:1)", ir: "C=O: 1720-1740 cm⁻¹" }],
+            3: [{ name: "Propanal", smiles: "CCC=O", nmr: "3 Envs (Ratio 3:2:1)", ir: "C=O: 1720-1740 cm⁻¹" }],
+            4: [
+                { name: "Butanal", smiles: "CCCC=O", nmr: "4 Envs", ir: "C=O: 1720-1740 cm⁻¹" },
+                { name: "2-Methylpropanal", smiles: "CC(C)C=O", nmr: "3 Envs", ir: "C=O: 1720-1740 cm⁻¹" }
+            ],
+            5: [{ name: "Pentanal", smiles: "CCCCC=O", nmr: "5 Envs", ir: "C=O" }],
+            6: [{ name: "Hexanal", smiles: "CCCCCC=O", nmr: "6 Envs", ir: "C=O" }]
+        },
+        ketone: {
+            3: [{ name: "Propanone", smiles: "CC(=O)C", nmr: "1 Env (Ratio 6)", ir: "C=O: 1710-1720 cm⁻¹" }],
+            4: [{ name: "Butanone", smiles: "CCC(=O)C", nmr: "3 Envs (Ratio 3:3:2)", ir: "C=O: 1710-1720 cm⁻¹" }],
+            5: [
+                { name: "Pentan-2-one", smiles: "CCCC(=O)C", nmr: "4 Envs (Ratio 3:3:2:2)", ir: "C=O" },
+                { name: "Pentan-3-one", smiles: "CCC(=O)CC", nmr: "2 Envs (Ratio 6:4)", ir: "C=O" }
+            ],
+            6: [
+                { name: "Hexan-2-one", smiles: "CCCCC(=O)C", nmr: "5 Envs", ir: "C=O" },
+                { name: "Hexan-3-one", smiles: "CCCC(=O)CC", nmr: "5 Envs", ir: "C=O" },
+                { name: "3-Methylpentan-2-one", smiles: "CCC(C)C(=O)C", nmr: "5 Envs", ir: "C=O" }
+            ]
+        },
+        acid: {
+            1: [{ name: "Methanoic acid", smiles: "O=CO", nmr: "2 Envs (Ratio 1:1)", ir: "O-H: 2500-3300 cm⁻¹ (broad)<br>C=O: 1700-1725 cm⁻¹" }],
+            2: [{ name: "Ethanoic acid", smiles: "CC(=O)O", nmr: "2 Envs (Ratio 3:1)", ir: "O-H: 2500-3300 cm⁻¹<br>C=O: 1700-1725 cm⁻¹" }],
+            3: [{ name: "Propanoic acid", smiles: "CCC(=O)O", nmr: "3 Envs (Ratio 3:2:1)", ir: "O-H: 2500-3300 cm⁻¹<br>C=O: 1700-1725 cm⁻¹" }],
+            4: [
+                { name: "Butanoic acid", smiles: "CCCC(=O)O", nmr: "4 Envs", ir: "O-H: 2500-3300 cm⁻¹" },
+                { name: "2-Methylpropanoic acid", smiles: "CC(C)C(=O)O", nmr: "3 Envs", ir: "O-H: 2500-3300 cm⁻¹" }
+            ],
+            5: [{ name: "Pentanoic acid", smiles: "CCCCC(=O)O", nmr: "5 Envs (Ratio 3:2:2:2:1)", ir: "O-H: 2500-3300 cm⁻¹" }],
+            6: [{ name: "Hexanoic acid", smiles: "CCCCCC(=O)O", nmr: "6 Envs", ir: "O-H: 2500-3300 cm⁻¹" }]
+        },
+        ester: {
+            2: [{ name: "Methyl methanoate", smiles: "COC=O", nmr: "2 Envs (Ratio 3:1)", ir: "C=O: 1735-1750 cm⁻¹<br>C-O: 1000-1300 cm⁻¹" }],
+            3: [
+                { name: "Methyl ethanoate", smiles: "COC(=O)C", nmr: "2 Envs (Ratio 3:3)", ir: "C=O: 1735-1750 cm⁻¹" },
+                { name: "Ethyl methanoate", smiles: "CCOC=O", nmr: "3 Envs", ir: "C=O: 1735-1750 cm⁻¹" }
+            ],
+            4: [
+                { name: "Ethyl ethanoate", smiles: "CCOC(=O)C", nmr: "3 Envs (Ratio 3:3:2)", ir: "C=O: 1735-1750 cm⁻¹" },
+                { name: "Methyl propanoate", smiles: "COC(=O)CC", nmr: "3 Envs", ir: "C=O: 1735-1750 cm⁻¹" },
+                { name: "Propyl methanoate", smiles: "CCCOC=O", nmr: "4 Envs", ir: "C=O: 1735-1750 cm⁻¹" }
+            ],
+            5: [
+                { name: "Propyl ethanoate", smiles: "CCCOC(=O)C", nmr: "4 Envs", ir: "C=O: 1735-1750 cm⁻¹" },
+                { name: "Ethyl propanoate", smiles: "CCOC(=O)CC", nmr: "4 Envs", ir: "C=O: 1735-1750 cm⁻¹" },
+                { name: "Methyl butanoate", smiles: "COC(=O)CCC", nmr: "4 Envs", ir: "C=O: 1735-1750 cm⁻¹" }
+            ],
+            6: [
+                { name: "Propyl propanoate", smiles: "CCCOC(=O)CC", nmr: "4 Envs", ir: "C=O: 1735-1750 cm⁻¹" },
+                { name: "Ethyl butanoate", smiles: "CCOC(=O)CCC", nmr: "5 Envs", ir: "C=O: 1735-1750 cm⁻¹" },
+                { name: "Butyl ethanoate", smiles: "CCCCOC(=O)C", nmr: "5 Envs", ir: "C=O: 1735-1750 cm⁻¹" }
+            ]
+        }
+    };
+
+    const isomerPair = document.getElementById('isomerPair');
+    const carbonSlider = document.getElementById('carbonSlider');
+    const carbonCount = document.getElementById('carbonCount');
+    const formulaDisplay = document.getElementById('formulaDisplay');
+    
+    const titleA = document.getElementById('titleA');
+    const titleB = document.getElementById('titleB');
+    const gridA = document.getElementById('gridA');
+    const gridB = document.getElementById('gridB');
+
+    // Drawing Engine utilizing SmilesDrawer with INCREASED PADDING to stop cutoff
+    function drawSkeletal(canvasId, smilesString) {
+        let options = {
+            width: 280,
+            height: 140,
+            bondThickness: 2,
+            shortBondLength: 0.8,
+            padding: 25, // Significantly increased padding to stop terminal atoms from clipping
+            overlapResolutionIterations: 1
+        };
+        
+        let smilesDrawer = new SmilesDrawer.Drawer(options);
+        
+        SmilesDrawer.parse(smilesString, function(tree) {
+            smilesDrawer.draw(tree, canvasId, 'light', false);
+        }, function(err) {
+            console.error("SmilesDrawer error for", smilesString, err);
+        });
+    }
+
+    function populatePanel(grid, familyKey, carbons) {
+        grid.innerHTML = '';
+        const structures = masterIsomerData[familyKey]?.[carbons] || [];
+
+        if (structures.length === 0) {
+            grid.innerHTML = `<div class="empty-msg">No structural isomers exist for this scope at C${carbons}</div>`;
+            return;
+        }
+
+        structures.forEach(comp => {
+            const card = document.createElement('div');
+            card.className = 'isomer-card';
+            
+            const name = document.createElement('div');
+            name.className = 'isomer-name';
+            name.textContent = comp.name;
+
+            const canvas = document.createElement('canvas');
+            // Canvas explicitly matched to the new larger Drawer options
+            canvas.width = 280;
+            canvas.height = 140;
+            
+            const uniqueId = 'canvas-' + Math.random().toString(36).substr(2, 9);
+            canvas.id = uniqueId;
+
+            const specPanel = document.createElement('div');
+            specPanel.className = 'spec-panel';
+
+            const nmrBox = document.createElement('div');
+            nmrBox.className = 'spec-box nmr-box';
+            nmrBox.innerHTML = `<div class="spec-title">¹H NMR Signature</div><div>${comp.nmr || 'Analyzing environments...'}</div>`;
+
+            const irBox = document.createElement('div');
+            irBox.className = 'spec-box ir-box';
+            irBox.innerHTML = `<div class="spec-title">Infrared (IR) Markers</div><div>${comp.ir || 'C-H features match generic standard.'}</div>`;
+
+            specPanel.appendChild(nmrBox);
+            specPanel.appendChild(irBox);
+
+            card.appendChild(name);
+            card.appendChild(canvas);
+            card.appendChild(specPanel);
+            grid.appendChild(card);
+
+            // Defer draw to allow DOM to attach the canvas properly
+            setTimeout(() => drawSkeletal(uniqueId, comp.smiles), 10);
+        });
+    }
+
+    function updateSandbox() {
+        const pairing = isomerPair.value;
+        const n = parseInt(carbonSlider.value);
+        carbonCount.textContent = n;
+
+        let keyA, keyB, nameA, nameB, formulaText;
+
+        switch(pairing) {
+            case 'alkene_cycloalkane':
+                keyA = 'alkene'; keyB = 'cycloalkane';
+                nameA = 'Alkenes (Unsaturated Framework)'; 
+                nameB = 'Cycloalkanes (Saturated Ring Framework)';
+                formulaText = `C<sub>${n}</sub>H<sub>${2*n}</sub> [Functional Isomers]`;
+                break;
+            case 'aliphatic_alkane':
+                keyA = 'aliphatic_alkane'; keyB = 'empty';
+                nameA = 'Aliphatic Alkanes'; 
+                nameB = 'No Isomeric Variant Pair Assigned';
+                formulaText = `C<sub>${n}</sub>H<sub>${2*n + 2}</sub> [Aliphatic Reference Base]`;
+                break;
+            case 'alcohol_ether':
+                keyA = 'alcohol'; keyB = 'ether';
+                nameA = 'Alcohols'; nameB = 'Ethers';
+                formulaText = `C<sub>${n}</sub>H<sub>${2*n + 2}</sub>O`;
+                break;
+            case 'carbonyls':
+                keyA = 'aldehyde'; keyB = 'ketone';
+                nameA = 'Aldehydes'; nameB = 'Ketones';
+                formulaText = `C<sub>${n}</sub>H<sub>${2*n}</sub>O`;
+                break;
+            case 'esters_acids':
+                keyA = 'acid'; keyB = 'ester';
+                nameA = 'Carboxylic Acids'; nameB = 'Esters';
+                formulaText = `C<sub>${n}</sub>H<sub>${2*n}</sub>O<sub>2</sub>`;
+                break;
+        }
+
+        formulaDisplay.innerHTML = `System Parameter: ${formulaText}`;
+        titleA.textContent = nameA;
+        titleB.textContent = nameB;
+
+        populatePanel(gridA, keyA, n);
+        populatePanel(gridB, keyB, n);
+    }
+
+    isomerPair.addEventListener('change', updateSandbox);
+    carbonSlider.addEventListener('input', updateSandbox);
+    updateSandbox();
+</script>
+
+</body>
+</html>
